@@ -13,9 +13,22 @@
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() :
+	// base rates for turning/looking up
 	BaseTurnRate(45.5f),
 	BaseLookUpRate(45.f),
+	// turn rates for aiming / not aiming
+	HipTurnRate(90.f),
+	HipLookUpRate(90.f),
+	AimingTurnRate(20.f),
+	AimingLookUpRate(20.f),
+	// mouse look sensitivity scale factors
+	MouseHipTurnRate(1.f),
+	MouseHipLookUpRate(1.f),
+	MouseAimingTurnRate(0.2f),
+	MouseAimingLookUpRate(0.2f),
+	// tru when aiming the weapon
 	bAiming(false),
+	// camera field of view values
 	CameraDefaultFOV(0.f), // set in BeginPlay
 	CameraZoomedFOV(35.0f),
 	CameraCurrentFOV(0.0f),
@@ -25,28 +38,28 @@ AShooterCharacter::AShooterCharacter() :
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-//Create a camera boom (pulls in towards the character if there is a colision)
-CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-CameraBoom->SetupAttachment(RootComponent);
-CameraBoom->TargetArmLength = 180.0f; // The camera follows at this distance behind the character
-CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-CameraBoom->SocketOffset = FVector(0.f, 50.f, 70.f);
+	// Create a camera boom (pulls in towards the character if there is a colision)
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom->TargetArmLength = 180.0f; // The camera follows at this distance behind the character
+	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	CameraBoom->SocketOffset = FVector(0.f, 50.f, 70.f);
 
-// Create a follow camera
-FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach camera to end of boom
-FollowCamera->bUsePawnControlRotation = false; //Camera does not rotate relative to arm
+	// Create a follow camera
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach camera to end of boom
+	FollowCamera->bUsePawnControlRotation = false; //Camera does not rotate relative to arm
 
-// dont rotate when the controller rotates. Let the controller only affect the camera
-bUseControllerRotationPitch = false;
-bUseControllerRotationRoll = false;
-bUseControllerRotationYaw = true;
+	// dont rotate when the controller rotates. Let the controller only affect the camera
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationRoll = false;
+	bUseControllerRotationYaw = true;
 
-// Configure character movement
-GetCharacterMovement()->bOrientRotationToMovement = false; // Character moves in the direction of input 
-GetCharacterMovement()->RotationRate = FRotator(0.f, 540.0f, 0.f); // ... at this rotation rate
-GetCharacterMovement()->JumpZVelocity = 600.f;
-GetCharacterMovement()->AirControl = 0.2f;
+	// Configure character movement
+	GetCharacterMovement()->bOrientRotationToMovement = false; // Character moves in the direction of input 
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 540.0f, 0.f); // ... at this rotation rate
+	GetCharacterMovement()->JumpZVelocity = 600.f;
+	GetCharacterMovement()->AirControl = 0.2f;
 
 }
 
@@ -97,6 +110,35 @@ void AShooterCharacter::TurnAtRate(float Rate)
 void AShooterCharacter::LookUpAtRate(float Rate)
 {
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds()); // deg/sec * sec/frame
+}
+
+void AShooterCharacter::Turn(float Value)
+{
+	float TurnScaleFactor{};
+	if (bAiming)
+	{
+		TurnScaleFactor = MouseAimingTurnRate;
+	}
+	else
+	{
+		TurnScaleFactor = MouseHipTurnRate;
+	}
+	AddControllerYawInput(Value * TurnScaleFactor);
+
+}
+
+void AShooterCharacter::LookUp(float Value)
+{
+	float LookUpScaleFactor{};
+	if (bAiming)
+	{
+		LookUpScaleFactor = MouseAimingLookUpRate;
+	}
+	else
+	{
+		LookUpScaleFactor = MouseHipLookUpRate;
+	}
+	AddControllerPitchInput(Value * LookUpScaleFactor);
 }
 
 void AShooterCharacter::FireWeapon()
@@ -229,6 +271,20 @@ void AShooterCharacter::CameraInterpZoom(float DeltaTime)
 	GetFollowCamera()->SetFieldOfView(CameraCurrentFOV);
 }
 
+void AShooterCharacter::SetLookRates()
+{
+	if (bAiming)
+	{
+		BaseTurnRate = AimingTurnRate;
+		BaseLookUpRate = AimingLookUpRate;
+	}
+	else
+	{
+		BaseTurnRate = HipTurnRate;
+		BaseLookUpRate = HipLookUpRate;
+	}
+}
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -236,6 +292,8 @@ void AShooterCharacter::Tick(float DeltaTime)
 
 	// Handle interpolation for zoom when aiming 
 	CameraInterpZoom(DeltaTime);
+	// change look sensitivity based on aiming
+	SetLookRates();
 }
 
 // Called to bind functionality to input
@@ -248,8 +306,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("TurnRate", this, &AShooterCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AShooterCharacter::LookUpAtRate);
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("Turn", this, &AShooterCharacter::Turn);
+	PlayerInputComponent->BindAxis("LookUp", this, &AShooterCharacter::LookUp);
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
