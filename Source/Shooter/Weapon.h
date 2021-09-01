@@ -6,9 +6,7 @@
 #include "Item.h"
 #include "Weapon.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SHOOTER_API AWeapon : public AItem
 {
@@ -19,7 +17,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 protected:
 	void StopFalling();
-private: 
+private:
 	FTimerHandle ThrowWeaponTimer;
 	float ThrowWeaponTime;
 	bool bFalling;
