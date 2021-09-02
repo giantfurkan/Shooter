@@ -6,6 +6,22 @@
 #include "GameFramework/Character.h"
 #include "ShooterCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class EAmmoType : uint8
+{
+	EAT_9mm UMETA(DisplayName = "9mm"),
+	EAT_AR UMETA(DisplayName = "AssaultRifle"),
+	EAT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
+enum class ECombatState : uint8
+{
+	ECS_Unoccupied UMETA(DisplayName = "Unoccupied"),
+	ECS_FireTimerInProgress UMETA(DisplayName = "FireTimeInProgress"),
+	ECS_Reloading UMETA(DisplayName = "Reloading"),
+	EAT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
 {
@@ -94,6 +110,12 @@ protected:
 
 	// drops currently equipped weapon and equips tracehititem
 	void SwapWeapon(AWeapon* WeaponToSwap);
+
+	// initialize the ammo map with ammo values
+	void InitializeAmmoMap();
+
+	// check to make sure our weapon has ammo
+	bool WeaponHasAmmo();
 
 public:
 	// Called every frame
@@ -254,6 +276,23 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
 		float CameraInterpElevation;
 
+	// map to keep track of ammo of the different ammo types
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+		TMap<EAmmoType, int32> AmmoMap;
+
+	// Starting amount of 9mm ammo
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items, meta = (AllowPrivateAccess = "true"))
+		int32 Starting9mmAmmo;
+
+	// starting amount of AR ammo
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items, meta = (AllowPrivateAccess = "true"))
+		int32 StartingARAmmo;
+
+	// combat state can only fire or reload if unoccupied
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	ECombatState CombatState;
+
+
 public:
 	// Returns CameraBoom subobject
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; };
@@ -274,5 +313,5 @@ public:
 	FVector GetCameraInterpLocation();
 
 	void GetPickupItem(AItem* Item);
-		
+
 };
