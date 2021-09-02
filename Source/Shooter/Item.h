@@ -134,6 +134,13 @@ private:
 	float ItemInterpX;
 	float ItemInterpY;
 
+	// initial yaw offset between the camera nad the interping item
+	float InterpInitialYawOffset;
+
+	// curve used to scale the item when interping
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+		UCurveFloat* ItemScaleCurve;
+
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -141,7 +148,7 @@ public:
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
 	void SetItemState(EItemState State);
 	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return ItemMesh; }
-	
+
 	// called from the AShooterCharacter class
 	void StartItemCurve(AShooterCharacter* Char);
 };

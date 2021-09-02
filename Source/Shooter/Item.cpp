@@ -6,6 +6,7 @@
 #include "Components/WidgetComponent.h"
 #include "Components/SphereComponent.h"
 #include "ShooterCharacter.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values
 AItem::AItem() :
@@ -19,7 +20,8 @@ AItem::AItem() :
 	CameraTargetLocation(FVector(0.f)),
 	bInterping(false),
 	ItemInterpX(0.f),
-	ItemInterpY(0.f)
+	ItemInterpY(0.f),
+	InterpInitialYawOffset(0.f)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -206,6 +208,8 @@ void AItem::FinishInterping()
 	{
 		Character->GetPickupItem(this);
 	}
+	// set scale back to normal
+	SetActorScale3D(FVector(1.f));
 }
 
 void AItem::ItemInterp(float DeltaTime)
@@ -244,6 +248,17 @@ void AItem::ItemInterp(float DeltaTime)
 		ItemLocation.Z += CurveValue * DeltaZ;
 		SetActorLocation(ItemLocation, true, nullptr, ETeleportType::TeleportPhysics);
 
+		// camera rotation this frame 
+		const FRotator CameraRotation{ Character->GetFollowCamera()->GetComponentRotation() };
+		// camera rotation plus initial yaw offset
+		FRotator ItemRotation{ 0.f, CameraRotation.Yaw + InterpInitialYawOffset, 0.f };
+		SetActorRotation(ItemRotation, ETeleportType::TeleportPhysics);
+
+		if (ItemScaleCurve)
+		{
+			const float ScaleCurveValue = ItemScaleCurve->GetFloatValue(ElapsedTime);
+			SetActorScale3D(FVector(ScaleCurveValue, ScaleCurveValue, ScaleCurveValue));
+		}
 	}
 }
 
@@ -273,5 +288,12 @@ void AItem::StartItemCurve(AShooterCharacter* Char)
 	SetItemState(EItemState::EIS_EquipInterping);
 
 	GetWorldTimerManager().SetTimer(ItemInterpTimer, this, &AItem::FinishInterping, ZCurveTime);
+
+	// get initial yaw of the camera
+	const float CameraRotationYaw{ Character->GetFollowCamera()->GetComponentRotation().Yaw };
+	// get initial yaw of the item
+	const float ItemRotationYaw{ GetActorRotation().Yaw };
+	// intial yaw offset between Camera And Item
+	InterpInitialYawOffset = ItemRotationYaw - CameraRotationYaw;
 }
 
