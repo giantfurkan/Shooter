@@ -4,16 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "AmmoType.h"
 #include "ShooterCharacter.generated.h"
 
-UENUM(BlueprintType)
-enum class EAmmoType : uint8
-{
-	EAT_9mm UMETA(DisplayName = "9mm"),
-	EAT_AR UMETA(DisplayName = "AssaultRifle"),
-	EAT_MAX UMETA(DisplayName = "DefaultMAX")
-};
-
+UENUM()
 enum class ECombatState : uint8
 {
 	ECS_Unoccupied UMETA(DisplayName = "Unoccupied"),
@@ -116,6 +110,20 @@ protected:
 
 	// check to make sure our weapon has ammo
 	bool WeaponHasAmmo();
+
+	// fireWeapon functions
+	void PlayFireSound();
+	void SendBullet();
+	void PlayGunfireMontage();
+
+	// bound to the R key and gamepad face button left
+	void ReloadButtonPressed();
+
+	// handle reloading of the weapon
+	void ReloadWeapon();
+
+	// checks to see if we have ammo of the equippedWeapon's data type
+	bool CarryingAmmo();
 
 public:
 	// Called every frame
@@ -290,8 +298,14 @@ private:
 
 	// combat state can only fire or reload if unoccupied
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
-	ECombatState CombatState;
+		ECombatState CombatState;
 
+	// montage for reload animations
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		UAnimMontage* ReloadMontage;
+
+	UFUNCTION(BlueprintCallable)
+		void FinishReloading();
 
 public:
 	// Returns CameraBoom subobject
