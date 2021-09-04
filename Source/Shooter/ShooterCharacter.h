@@ -127,14 +127,18 @@ protected:
 
 	// called from animation blueprint with grab clip notify
 	UFUNCTION(BlueprintCallable)
-	void GrabClip();
+		void GrabClip();
 
 	// called from animation blueprint with release clip notify
 	UFUNCTION(BlueprintCallable)
-	void ReleaseClip();
+		void ReleaseClip();
 
 	void CrouchButtonPressed();
 
+	virtual void Jump() override;
+
+	// interps capsule half height when crouching/standing
+	void InterpCapsuleHalfHeight(float DeltaTime);
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -319,7 +323,7 @@ private:
 
 	// transform of the clip when we first grab the clip during reloading
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
-	FTransform ClipTransform;
+		FTransform ClipTransform;
 
 	// scene component to attach to the character's hand during reloading
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
@@ -327,7 +331,34 @@ private:
 
 	// true when crouching
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	bool bCrouching;
+		bool bCrouching;
+
+	// regular movement speed
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+		float BaseMovementSpeed;
+
+	// crouch movement speed
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+		float CrouchMovementSpeed;
+
+	// current half height of the capsule
+	float CurrentCapsuleHalfHeight;
+
+	// half height of the capsule when not crouching
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
+		float StandingCapsuleHalfHeight;
+
+	// half height of the capsule when crouching
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
+		float CrouchingCapsuleHalfHeight;
+
+	// ground friction while not crouching
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
+		float BaseGroundFriction;
+
+	// ground friction while crouching
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
+		float CrouchingGroundFriction;
 
 public:
 	// Returns CameraBoom subobject
