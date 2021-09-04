@@ -139,6 +139,10 @@ protected:
 
 	// interps capsule half height when crouching/standing
 	void InterpCapsuleHalfHeight(float DeltaTime);
+
+	void Aim();
+	void StopAiming();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -220,10 +224,12 @@ private:
 		bool bAiming;
 
 	// Default camera filed of view value
-	float CameraDefaultFOV;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		float CameraDefaultFOV;
 
 	// Field of view value for when zoomed in
-	float CameraZoomedFOV;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		float CameraZoomedFOV;
 
 	// Current field of view this frame
 	float CameraCurrentFOV;
@@ -359,6 +365,9 @@ private:
 	// ground friction while crouching
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
 		float CrouchingGroundFriction;
+
+	// used for knowing when the aiming button is pressed
+	bool bAimingButtonPressed;
 
 public:
 	// Returns CameraBoom subobject
