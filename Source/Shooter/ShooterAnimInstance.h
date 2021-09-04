@@ -19,45 +19,45 @@ enum class EOffsetState : uint8
 };
 
 /**
- * 
+ *
  */
 UCLASS()
 class SHOOTER_API UShooterAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
-public: 
+public:
 	UShooterAnimInstance();
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateAnimationProperties(float DeltaTime);
+		void UpdateAnimationProperties(float DeltaTime);
 
 	virtual void NativeInitializeAnimation() override;
 
-protected: 
-	
+protected:
+
 	// handle turning in place variables
 	void TurnInPlace();
 
 	// handle calculations for leaning while running
-	void Lean();
-	
+	void Lean(float DeltaTime);
+
 private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	class AShooterCharacter* ShooterCharacter;
+		class AShooterCharacter* ShooterCharacter;
 
 	// the speed of the character
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	float Speed;
+		float Speed;
 
 	// whether or not the character is in the air
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	bool bIsInAir;
+		bool bIsInAir;
 
 
 	// whether or not the character is moving 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	bool bIsAccelerating;
+		bool bIsAccelerating;
 
 	// offset yaw used for strafing
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
@@ -77,7 +77,7 @@ private:
 	float TIPCharacterYawLastFrame;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
-	float RootYawOffset;
+		float RootYawOffset;
 
 	// rotation curve value this frame
 	float RotationCurve;
@@ -98,8 +98,16 @@ private:
 		EOffsetState OffsetState;
 
 	// character yaw this frame
-	float CharacterYaw;
+	FRotator CharacterRotation;
 
 	// character yaw last frame
-	float CharacterYawLastFrame;
+	FRotator CharacterRotationLastFrame;
+
+	// yaw delta for leaining in the running blendspace
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Lean, meta = (AllowPrivateAccess = "true"))
+		float YawDelta;
+
+	// true when crouching
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Crouching, meta = (AllowPrivateAccess = "true"))
+		bool bCrouching;
 };
