@@ -17,6 +17,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Ammo.h"
 
 
 
@@ -730,6 +731,30 @@ void AShooterCharacter::StopAiming()
 	}
 }
 
+void AShooterCharacter::PickupAmmo(AAmmo* Ammo)
+{
+	// check to see if ammoMap contains Ammo's AmmoType
+	if (AmmoMap.Find(Ammo->GetAmmoType()))
+	{
+		// get amount of ammo in our ammomap for Ammo's type
+		int32 AmmoCount{ AmmoMap[Ammo->GetAmmoType()] };
+		AmmoCount += Ammo->GetItemCount();
+		// set the amount of ammo in the map for this type
+		AmmoMap[Ammo->GetAmmoType()] = AmmoCount;
+	}
+
+	if (EquippedWeapon->GetAmmoType() == Ammo->GetAmmoType())
+	{
+		// check to see if the gun is empty
+		if (EquippedWeapon->GetAmmo() == 0)
+		{
+			ReloadWeapon();
+		}
+	}
+
+	Ammo->Destroy();
+}
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -852,10 +877,17 @@ void AShooterCharacter::GetPickupItem(AItem* Item)
 	{
 		UGameplayStatics::PlaySound2D(this, Item->GetEquipSound());
 	}
+
 	auto Weapon = Cast<AWeapon>(Item);
 	if (Weapon)
 	{
 		SwapWeapon(Weapon);
+	}
+
+	auto Ammo = Cast<AAmmo>(Item);
+	if (Ammo)
+	{
+		PickupAmmo(Ammo);
 	}
 }
 
