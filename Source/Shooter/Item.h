@@ -74,9 +74,17 @@ protected:
 	// get interp location based on the item type
 	FVector GetInterpLocation();
 
+	void PlayPickupSound();
+
+	virtual void InitializeCustomDepth();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	// called in AShooterCharacter::GetPickup
+	void PlayEquipSound();
+
 
 private:
 	// skeletal mesh for the item
@@ -180,4 +188,7 @@ public:
 
 	// called from the AShooterCharacter class
 	void StartItemCurve(AShooterCharacter* Char);
+
+	virtual void EnableCustomDepth();
+	virtual void DisableCustomDepth();
 };

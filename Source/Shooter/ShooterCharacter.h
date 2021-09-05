@@ -160,7 +160,7 @@ protected:
 	void PickupAmmo(class AAmmo* Ammo);
 
 	void InitializeInterpLocation();
-		
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -412,7 +412,22 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<FInterpLocation> InterpLocations;
 
+	FTimerHandle PickupSoundTimer;
+	FTimerHandle EquipSoundTimer;
 
+	bool bShouldPlayPickupSound;
+	bool bShouldPlayEquipSound;
+
+	void ResetPickupSoundTimer();
+	void ResetEquipSoundTimer();
+
+	// time to wait before we can play another pickup sound
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+		float PickupSoundResetTime;
+
+	// time to wait before we can play another equip sound
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+		float EquipSoundResetTime;
 
 public:
 	// Returns CameraBoom subobject
@@ -439,9 +454,16 @@ public:
 	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
 	FORCEINLINE bool GetCrouching() const { return bCrouching; }
 	FInterpLocation GetInterpLocation(int32 index);
-	
+
 	// returns the index in InterpLocations array with the lowest itemCount
 	int32 GetInterpLocationIndex();
 
 	void IncrementInterpLocItemCount(int32 index, int32 Amount);
+
+	FORCEINLINE bool ShouldPlayPickupSound() const { return bShouldPlayPickupSound; }
+	FORCEINLINE bool ShouldPlayEquipSound() const { return bShouldPlayEquipSound; }
+
+	void StartPickupSoundTimer();
+	void StartEquipSoundTimer();
+
 };
