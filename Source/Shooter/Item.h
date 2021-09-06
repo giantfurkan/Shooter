@@ -74,7 +74,7 @@ protected:
 	// get interp location based on the item type
 	FVector GetInterpLocation();
 
-	void PlayPickupSound();
+	void PlayPickupSound(bool bForcePlaySound = false );
 
 	virtual void InitializeCustomDepth();
 
@@ -91,7 +91,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// called in AShooterCharacter::GetPickup
-	void PlayEquipSound();
+	void PlayEquipSound(bool bForcePlaySound = false); 
+	//** when give a function, a default value for its parameter, that means that parameter is optional			**\\
+	//** if you have parameters that have default values, they have to be the last parameter!					**\\
+	//** and if there are multiple parameters with default values, they all have to be the last parameters!		**\\
 
 
 private:
@@ -236,6 +239,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
 		int32 SlotIndex;
 
+	// true when the character's inventory is full
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+		bool bCharacterInventoryFull;
+
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -248,9 +255,14 @@ public:
 	FORCEINLINE int32 GetItemCount() const { return ItemCount; }
 	FORCEINLINE int32 GetSlotIndex() const { return SlotIndex; }
 	FORCEINLINE void SetSlotIndex(int32 Index) { SlotIndex = Index; }
+	FORCEINLINE void SetCharacter(AShooterCharacter* Char) { Character = Char; }
+	FORCEINLINE void SetCharacterInventoryFull(bool bFull) { bCharacterInventoryFull = bFull; }
 
 	// called from the AShooterCharacter class
-	void StartItemCurve(AShooterCharacter* Char);
+	void StartItemCurve(AShooterCharacter* Char, bool bForcePlaySound = false);
+	//** when give a function, a default value for its parameter, that means that parameter is optional			**\\
+	//** if you have parameters that have default values, they have to be the last parameter!					**\\
+	//** and if there are multiple parameters with default values, they all have to be the last parameters!		**\\
 
 	virtual void EnableCustomDepth();
 	virtual void DisableCustomDepth();
