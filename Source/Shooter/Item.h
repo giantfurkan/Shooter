@@ -203,7 +203,7 @@ private:
 		class UCurveVector* PulseCurve;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-		 UCurveVector* InterpPulseCurve;
+		UCurveVector* InterpPulseCurve;
 
 	FTimerHandle PulseTimer;
 
@@ -212,13 +212,29 @@ private:
 		float PulseCurveTime;
 
 	UPROPERTY(VisibleAnywhere, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	float GlowAmount;
+		float GlowAmount;
 
 	UPROPERTY(VisibleAnywhere, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 		float FresnelExponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 		float FresnelReflectFraction;
+
+	// background for this item in the inventory
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+		UTexture2D* IconBackground;
+
+	// icon for this item in the inventory
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+		UTexture2D* IconItem;
+
+	// Ammo icon for this item in the inventory
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+		UTexture2D* AmmoItem;
+
+	// slot in the inventory array
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+		int32 SlotIndex;
 
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
@@ -230,6 +246,8 @@ public:
 	FORCEINLINE USoundCue* GetPickupSound() const { return PickupSound; }
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
 	FORCEINLINE int32 GetItemCount() const { return ItemCount; }
+	FORCEINLINE int32 GetSlotIndex() const { return SlotIndex; }
+	FORCEINLINE void SetSlotIndex(int32 Index) { SlotIndex = Index; }
 
 	// called from the AShooterCharacter class
 	void StartItemCurve(AShooterCharacter* Char);

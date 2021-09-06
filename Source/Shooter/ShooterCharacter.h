@@ -7,6 +7,15 @@
 #include "AmmoType.h"
 #include "ShooterCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class ECombatState : uint8
+{
+	ECS_Unoccupied UMETA(DisplayName = "Unoccupied"),
+	ECS_FireTimerInProgress UMETA(DisplayName = "FireTimeInProgress"),
+	ECS_Reloading UMETA(DisplayName = "Reloading"),
+	EAT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 USTRUCT(BlueprintType)
 struct FInterpLocation
 {
@@ -21,14 +30,8 @@ struct FInterpLocation
 		int32 ItemCount;
 };
 
-UENUM(BlueprintType)
-enum class ECombatState : uint8
-{
-	ECS_Unoccupied UMETA(DisplayName = "Unoccupied"),
-	ECS_FireTimerInProgress UMETA(DisplayName = "FireTimeInProgress"),
-	ECS_Reloading UMETA(DisplayName = "Reloading"),
-	EAT_MAX UMETA(DisplayName = "DefaultMAX")
-};
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEquipItemDelegate, int32, CurrentSlotIndex, int32, NewSlotIndex);
+
 
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -160,6 +163,15 @@ protected:
 	void PickupAmmo(class AAmmo* Ammo);
 
 	void InitializeInterpLocation();
+
+	void FKeyPressed();
+	void OneKeyPressed();
+	void TwoKeyPressed();
+	void ThreeKeyPressed();
+	void FourKeyPressed();
+	void FiveKeyPressed();
+
+	void ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex);
 
 public:
 	// Called every frame
@@ -428,6 +440,16 @@ private:
 	// time to wait before we can play another equip sound
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
 		float EquipSoundResetTime;
+
+	// an array of AItems for our Inventory
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+		TArray<AItem*> Inventory;
+
+	const int32 INVENTORY_CAPACITY{ 6 };
+
+	// Delegate for sending slot information to InventoryBar when equipping
+	UPROPERTY(BlueprintAssignable, Category = Delegates, meta = (AllowPrivateAccess = "true"))
+		FEquipItemDelegate EquipItemDelegate;
 
 public:
 	// Returns CameraBoom subobject

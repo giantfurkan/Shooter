@@ -33,7 +33,8 @@ AItem::AItem() :
 	GlowAmount(150.f),
 	FresnelExponent(3.f),
 	FresnelReflectFraction(4.f),
-	PulseCurveTime(5.f)
+	PulseCurveTime(5.f),
+	SlotIndex(0)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -181,6 +182,19 @@ void AItem::SetItemProperties(EItemState State)
 		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	case EItemState::EIS_PickedUp:
+		PickupWidget->SetVisibility(false);
+		// set mesh properties
+		ItemMesh->SetSimulatePhysics(false);
+		ItemMesh->SetVisibility(false);
+		ItemMesh->SetEnableGravity(false);
+		ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// set areaSphere properties
+		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// set collisionBox properties
+		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	case EItemState::EIS_Equipped:
 		// set mesh properties
@@ -201,6 +215,7 @@ void AItem::SetItemProperties(EItemState State)
 		ItemMesh->SetSimulatePhysics(true);
 		ItemMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		ItemMesh->SetEnableGravity(true);
+		ItemMesh->SetVisibility(true);
 		ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		ItemMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 		// set areaSphere properties
@@ -226,7 +241,6 @@ void AItem::FinishInterping()
 		// subtract 1 from the item count of the interp location struct
 		Character->IncrementInterpLocItemCount(InterpLocIndex, -1);
 		Character->GetPickupItem(this);
-		SetItemState(EItemState::EIS_PickedUp);
 	}
 	// set scale back to normal
 	SetActorScale3D(FVector(1.f));
