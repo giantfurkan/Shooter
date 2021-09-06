@@ -78,6 +78,14 @@ protected:
 
 	virtual void InitializeCustomDepth();
 
+	virtual void OnConstruction(const FTransform& Transform) override;
+
+	void EnabledGlowMaterial();
+
+	void UpdatePulse();
+	void ResetPulseTimer();
+	void StartPulseTimer();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -175,6 +183,43 @@ private:
 	// index of the interp location this item is interping to
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 		int32 InterpLocIndex;
+
+	// index for the material we'd like to change at runtime
+	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+		int32 MaterialIndex;
+
+	// dynamic instance that we canhe at runtime
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+		UMaterialInstanceDynamic* DynamicMaterialInstance;
+
+	// material instance used with the dyanmic material instance
+	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+		UMaterialInstance* MaterialInstance;
+
+	bool bCanChangeCustomDepth;
+
+	// curve to drive the dynamic material parameters
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+		class UCurveVector* PulseCurve;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+		 UCurveVector* InterpPulseCurve;
+
+	FTimerHandle PulseTimer;
+
+	// time for the pulsetimer
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+		float PulseCurveTime;
+
+	UPROPERTY(VisibleAnywhere, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	float GlowAmount;
+
+	UPROPERTY(VisibleAnywhere, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+		float FresnelExponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+		float FresnelReflectFraction;
+
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -191,4 +236,7 @@ public:
 
 	virtual void EnableCustomDepth();
 	virtual void DisableCustomDepth();
+	void DisableGlowMaterial();
+
+
 };
