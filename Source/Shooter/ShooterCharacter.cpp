@@ -731,6 +731,8 @@ void AShooterCharacter::GrabClip()
 	if (EquippedWeapon == nullptr) return;
 	if (HandSceneComponent == nullptr) return;
 
+	UE_LOG(LogTemp, Warning, TEXT("ewe"));
+
 	// index for the clip bone on the equipped weapon
 	int32 ClipBoneIndex{ EquippedWeapon->GetItemMesh()->GetBoneIndex(EquippedWeapon->GetClipBoneName()) };
 
