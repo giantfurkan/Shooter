@@ -98,6 +98,8 @@ protected:
 	void StopFalling();
 
 	virtual void OnConstruction(const FTransform& Transform) override;
+
+	virtual void BeginPlay() override;
 private:
 	FTimerHandle ThrowWeaponTimer;
 	float ThrowWeaponTime;
