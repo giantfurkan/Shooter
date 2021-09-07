@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Item.h"
 #include "AmmoType.h"
+#include "Engine/DataTable.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -16,6 +17,47 @@ enum class EWeaponType : uint8
 	EWT_MAX UMETA(DisplayName = "DefaultMAX")
 
 };
+
+USTRUCT(BlueprintType)
+struct FWeaponDataTable : public FTableRowBase
+{
+	GENERATED_BODY()
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		EAmmoType AmmoType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 WeaponAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 MagazineCapacity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class USoundCue* PickupSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundCue* EquipSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USkeletalMesh* ItemMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString ItemName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UTexture2D* InventoryIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UTexture2D* AmmoIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UMaterialInstance* MaterialInstance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 MaterialIndex;
+};
+
+
 UCLASS()
 class SHOOTER_API AWeapon : public AItem
 {
@@ -25,7 +67,10 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 protected:
+
 	void StopFalling();
+
+	virtual void OnConstruction(const FTransform& Transform) override;
 private:
 	FTimerHandle ThrowWeaponTimer;
 	float ThrowWeaponTime;
@@ -52,11 +97,17 @@ private:
 
 	// true when moving the clip while reloading
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
-	bool bMovingClip;
+		bool bMovingClip;
 
 	// name for the clip bone
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
 		FName ClipBoneName;
+
+	// data table for weapon properties
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = DataTable, meta = (AllowPrivateAccess = "true"))
+		UDataTable* WeaponDataTable;
+
+	int32 PreviousMaterialIndex;
 
 public:
 	// adds an impulse to the Weapon
