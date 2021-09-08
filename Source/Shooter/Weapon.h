@@ -82,6 +82,9 @@ struct FWeaponDataTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FName BoneToHide;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bAutomatic;
 };
 
 
@@ -100,6 +103,11 @@ protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 	virtual void BeginPlay() override;
+
+	void FinishMovingSlide();
+
+	void UpdateSlideDisplacment();
+
 private:
 	FTimerHandle ThrowWeaponTimer;
 	float ThrowWeaponTime;
@@ -170,6 +178,39 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = DataTable, meta = (AllowPrivateAccess = "true"))
 		FName BoneToHide;
 
+	// Amount that the slide is pushed back during pistol fire
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Pistol, meta = (AllowPrivateAccess = "true"))
+		float SlideDisplacement;
+
+	// curve for the slide displacement
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pistol, meta = (AllowPrivateAccess = "true"))
+		UCurveFloat* SlideDisplacementCurve;
+
+	// timer handle for updating slideDisplacement
+	FTimerHandle SlideTimer;
+
+	// time for displacing the slide during pistol fire
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pistol, meta = (AllowPrivateAccess = "true"))
+		float SlideDisplacementTime;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Pistol, meta = (AllowPrivateAccess = "true"))
+		bool bMovingSlide;
+
+	// max distance for the slide on the pistol
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pistol, meta = (AllowPrivateAccess = "true"))
+		float MaxSlideDisplacment;
+
+	// max rotation for pistol recoil
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pistol, meta = (AllowPrivateAccess = "true"))
+		float MaxRecoilRotation;
+
+	// Amount that the pistol will rotate during pistol fire
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Pistol, meta = (AllowPrivateAccess = "true"))
+		float RecoilRotation;
+
+	// true for auto gunfire
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
+		bool bAutomatic;
 public:
 	// adds an impulse to the Weapon
 	void ThrowWeapon();
@@ -189,7 +230,9 @@ public:
 	FORCEINLINE float GetAutoFireRate() const { return AutoFireRate; }
 	FORCEINLINE UParticleSystem* GetMuzzleFlash() const { return MuzzleFlash; }
 	FORCEINLINE USoundCue* GetFireSound() const { return FireSound; }
+	FORCEINLINE bool GetAutomatic() const { return bAutomatic; }
 
+	void StartSlideTimer();
 
 	void ReloadAmmo(int32 Amount);
 
