@@ -677,23 +677,34 @@ void AShooterCharacter::SendBullet()
 				AEnemy* HitEnemy = Cast<AEnemy>(BeamHitResult.Actor.Get());
 				if (HitEnemy)
 				{
+					int32 Damage{};
 					if (BeamHitResult.BoneName.ToString() == HitEnemy->GetHeadBone())
 					{
+						// head shot
+						Damage = EquippedWeapon->GetHeadShotDamage();
+						// randomize damage amount
+						Damage = FMath::RandRange(Damage - 5, Damage + 5);
 						UGameplayStatics::ApplyDamage(
 							BeamHitResult.Actor.Get(),
-							EquippedWeapon->GetHeadShotDamage(),
+							Damage,
 							GetController(), this,
 							UDamageType::StaticClass());
+						HitEnemy->ShowHitNumber(Damage, BeamHitResult.Location, true);
 					}
 					else
 					{
+						// body shot
+						Damage = EquippedWeapon->GetDamage();
+						// randomize damage amount
+						Damage = FMath::RandRange(Damage - 5, Damage + 5);
 						UGameplayStatics::ApplyDamage(
 							BeamHitResult.Actor.Get(),
-							EquippedWeapon->GetDamage(),
+							Damage,
 							GetController(), this,
 							UDamageType::StaticClass());
+						HitEnemy->ShowHitNumber(Damage, BeamHitResult.Location, false);
 					}
-					
+
 				}
 			}
 			else
