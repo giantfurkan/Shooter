@@ -72,7 +72,7 @@ protected:
 			UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	// activate/deactivate collision for weapon boxes
-		UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable)
 		void ActivateLeftWeapon();
 	UFUNCTION(BlueprintCallable)
 		void DeactivateLeftWeapon();
@@ -80,12 +80,20 @@ protected:
 		void ActivateRightWeapon();
 	UFUNCTION(BlueprintCallable)
 		void DeactivateRightWeapon();
-	
+
 	void DoDamage(class AShooterCharacter* Victim);
 	void SpawnBlood(AShooterCharacter* Victim, FName SocketName);
 
 	// attemp to stun character
 	void StunCharacter(AShooterCharacter* Victim);
+
+	void ResetCanAttack();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishDeath();
+
+	UFUNCTION()
+	void DestroyEnemy();
 
 private:
 
@@ -191,7 +199,7 @@ private:
 
 	// base damage for enemy
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
-	float BaseDamage;
+		float BaseDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 		FName LeftWeaponSocket;
@@ -199,6 +207,27 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 		FName RighttWeaponSocket;
 
+	// true when enemy can attack
+	UPROPERTY(VisibleAnywhere, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		bool bCanAttack;
+
+	FTimerHandle AttackWaitTimer;
+
+	// minimum wait time between attacks
+	UPROPERTY(EditAnywhere, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		float AttackWaitTime;
+
+	// death anim montage for the enemy
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		UAnimMontage* DeathMontage;
+
+	bool bDying;
+
+	FTimerHandle DeathTimer;
+
+	// time after death until destroy
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		float DeathTime;
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

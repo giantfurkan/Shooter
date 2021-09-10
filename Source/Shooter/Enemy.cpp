@@ -34,8 +34,11 @@ AEnemy::AEnemy() :
 	AttackR(TEXT("AttackR")),
 	BaseDamage(20.f),
 	LeftWeaponSocket(TEXT("FX_Trail_L_01")),
-	RighttWeaponSocket(TEXT("FX_Trail_R_01"))
-
+	RighttWeaponSocket(TEXT("FX_Trail_R_01")),
+	bCanAttack(true),
+	AttackWaitTime(1.f),
+	bDying(false),
+	DeathTime(4.f)
 
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -96,6 +99,11 @@ void AEnemy::BeginPlay()
 	// get the ai controller
 	EnemyController = Cast<AEnemyController>(GetController());
 
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("CanAttack"), true);
+	}
+
 	const FVector WorldPatrolPoint = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint);
 	const FVector WorldPatrolPoint2 = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint2);
 	DrawDebugSphere(GetWorld(), WorldPatrolPoint, 25.f, 12, FColor::Red, true);
@@ -119,7 +127,24 @@ void AEnemy::ShowHealthBar_Implementation()
 
 void AEnemy::Die()
 {
+	if (bDying) return;
+	bDying = true;
+
 	HideHealthBar();
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DeathMontage)
+	{
+		AnimInstance->Montage_Play(DeathMontage);
+	}
+
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"), true);
+		EnemyController->StopMovement();
+
+	}
+
 }
 
 void AEnemy::PlayHitMontage(FName Section, float PlayRate)
@@ -236,6 +261,13 @@ void AEnemy::PlayAttackMontage(FName Section, float PlayRate)
 		AnimInstance->Montage_Play(AttackMontage);
 		AnimInstance->Montage_JumpToSection(Section, AttackMontage);
 	}
+	bCanAttack = false;
+	GetWorldTimerManager().SetTimer(AttackWaitTimer, this, &AEnemy::ResetCanAttack, AttackWaitTime);
+
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("CanAttack"), false);
+	}
 }
 
 FName AEnemy::GetAttackSectionName()
@@ -270,13 +302,13 @@ void AEnemy::DoDamage(AShooterCharacter* Victim)
 		this, UDamageType::StaticClass());
 
 
-	//if (Victim->GetMeleeImpactSound())
-	//{
-	//	UGameplayStatics::PlaySoundAtLocation(
-	//		this,
-	//		Victim->GetMeleeImpactSound(),
-	//		GetActorLocation());
-	//}
+	if (Victim->GetMeleeImpactSound())
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			Victim->GetMeleeImpactSound(),
+			GetActorLocation());
+	}
 }
 
 void AEnemy::SpawnBlood(AShooterCharacter* Victim, FName SocketName)
@@ -302,6 +334,29 @@ void AEnemy::StunCharacter(AShooterCharacter* Victim)
 			Victim->Stun();
 		}
 	}
+}
+
+void AEnemy::ResetCanAttack()
+{
+	bCanAttack = true;
+
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("CanAttack"), true);
+	}
+}
+
+void AEnemy::FinishDeath()
+{
+	GetMesh()->bPauseAnims = true;
+
+	GetWorldTimerManager().SetTimer(DeathTimer, this, &AEnemy::DestroyEnemy, DeathTime);
+
+}
+
+void AEnemy::DestroyEnemy()
+{
+	Destroy();
 }
 
 void AEnemy::OnLeftWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -374,6 +429,8 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, HitResult.Location, FRotator(0.f), true);
 	}
+
+	if (bDying) return;
 	ShowHealthBar();
 
 	// determine whether bullet hit stuns
@@ -392,6 +449,11 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsObject(FName("Target"), DamageCauser);
+	}
+
 	if (Health - DamageAmount <= 0.f)
 	{
 		Health = 0.f;
