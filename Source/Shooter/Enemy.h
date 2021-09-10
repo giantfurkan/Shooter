@@ -21,11 +21,11 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintNativeEvent)
-	void ShowHealthBar();
+		void ShowHealthBar();
 	void ShowHealthBar_Implementation();
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void HideHealthBar();
+		void HideHealthBar();
 
 	void Die();
 
@@ -34,12 +34,58 @@ protected:
 	void ResetHitReactTimer();
 
 	UFUNCTION(BlueprintCallable)
-	void StoreHitNumber(UUserWidget* HitNumber, FVector Location);
+		void StoreHitNumber(UUserWidget* HitNumber, FVector Location);
 
 	UFUNCTION()
-	void DestroyHitNumber(UUserWidget* HitNumber);
+		void DestroyHitNumber(UUserWidget* HitNumber);
 
 	void UpdateHitNumbers();
+
+	// called when something overlaps with the agro sphere
+	UFUNCTION()
+		void AgroSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+			UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION(BlueprintCallable)
+		void SetStunned(bool Stunned);
+
+	UFUNCTION()
+		void CombatRangeOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+			UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+		void CombatRangeEndOverlap(UPrimitiveComponent* OverlappedComponent,
+			AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UFUNCTION(BlueprintCallable)
+		void PlayAttackMontage(FName Section, float PlayRate);
+
+	UFUNCTION(BlueprintPure)
+		FName GetAttackSectionName();
+
+	UFUNCTION()
+		void OnLeftWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+			UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+		void OnRightWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+			UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	// activate/deactivate collision for weapon boxes
+		UFUNCTION(BlueprintCallable)
+		void ActivateLeftWeapon();
+	UFUNCTION(BlueprintCallable)
+		void DeactivateLeftWeapon();
+	UFUNCTION(BlueprintCallable)
+		void ActivateRightWeapon();
+	UFUNCTION(BlueprintCallable)
+		void DeactivateRightWeapon();
+	
+	void DoDamage(class AShooterCharacter* Victim);
+	void SpawnBlood(AShooterCharacter* Victim, FName SocketName);
+
+	// attemp to stun character
+	void StunCharacter(AShooterCharacter* Victim);
 
 private:
 
@@ -71,13 +117,13 @@ private:
 
 	// montage containing hit and death animations
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
-	UAnimMontage* HitMontage;
+		UAnimMontage* HitMontage;
 
 	FTimerHandle HitReactTimer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 		float HitReactTimeMin;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 		float HitReactTimeMax;
 
@@ -85,7 +131,7 @@ private:
 
 	// map to store hitNumber widgets and their hit locations
 	UPROPERTY(VisibleAnywhere, Category = Combat, meta = (AllowPrivateAccess = "true"))
-	TMap<UUserWidget*, FVector> HitNumbers;
+		TMap<UUserWidget*, FVector> HitNumbers;
 
 	// time before a hitNumber is removed from the screen
 	UPROPERTY(EditAnywhere, Category = Combat, meta = (AllowPrivateAccess = "true"))
@@ -93,15 +139,67 @@ private:
 
 	// Behavior tree for the AI Character
 	UPROPERTY(EditAnywhere, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
-	class UBehaviorTree* BehaviorTree;
-	
+		class UBehaviorTree* BehaviorTree;
+
 	// point for the enemy to move to
 	UPROPERTY(EditAnywhere, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
-	FVector PatrolPoint;
+		FVector PatrolPoint;
+
+	// second point for the enemy to move to
+	UPROPERTY(EditAnywhere, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
+		FVector PatrolPoint2;
 
 	class AEnemyController* EnemyController;
 
-	public:
+	// overlap sphere for when the enemy becomes hostile
+	UPROPERTY(EditAnywhere, BlueprintReadwrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		class USphereComponent* AgroSphere;
+
+	// true when playing the get hit animation
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		bool bStunned;
+
+	// chance of being stunned. 0: no stun chance, 1: 100% stun chance
+	UPROPERTY(EditAnywhere, BlueprintReadwrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		float StunChance;
+
+	// true when in attack range time to attack!
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		bool bInAttackRange;
+
+	// overlap sphere for when the enemy becomes hostile
+	UPROPERTY(EditAnywhere, BlueprintReadwrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		class USphereComponent* CombatRangeSphere;
+
+	// montage containing different attacks
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		UAnimMontage* AttackMontage;
+
+	// the four attack montage section names
+	FName AttackLFast;
+	FName AttackRFast;
+	FName AttackL;
+	FName AttackR;
+
+	// collision volume for the left weapon
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		class UBoxComponent* LeftWeaponCollision;
+
+	// collision volume for the right weapon
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		UBoxComponent* RightWeaponCollision;
+
+	// base damage for enemy
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	float BaseDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		FName LeftWeaponSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		FName RighttWeaponSocket;
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -115,7 +213,7 @@ private:
 	FORCEINLINE FString GetHeadBone() const { return HeadBone; }
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void ShowHitNumber(int32 Damage, FVector HitLocation, bool bHeadShot);
+		void ShowHitNumber(int32 Damage, FVector HitLocation, bool bHeadShot);
 
 	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 };

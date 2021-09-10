@@ -14,6 +14,8 @@ enum class ECombatState : uint8
 	ECS_FireTimerInProgress UMETA(DisplayName = "FireTimeInProgress"),
 	ECS_Reloading UMETA(DisplayName = "Reloading"),
 	ECS_Equipping UMETA(DisplayName = "Equipping"),
+	ECS_Stunned UMETA(DisplayName = "Stunned"),
+
 	EAT_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
@@ -43,6 +45,10 @@ class SHOOTER_API AShooterCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AShooterCharacter();
+
+	// take combat damage
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EvenInstigator,
+		AActor* DamageCauser) override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -180,7 +186,10 @@ protected:
 	void HighlightInventorySlot();
 
 	UFUNCTION(BlueprintCallable)
-	EPhysicalSurface GetSurfaceType();
+		EPhysicalSurface GetSurfaceType();
+
+	UFUNCTION(BlueprintCallable)
+		void EndStun();
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -463,6 +472,29 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
 		int32 HighlightedSlot;
 
+	// character health
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		float Health;
+
+	// character max health
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		float MaxHealth;
+
+	// sound made when character gets hit by a melee attack
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		class USoundCue* MeleeImpactSound;
+
+	// blood splatter particles for melee hit
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		UParticleSystem* BloodParticles;
+
+	// hit react anim montage; for when character is stunned
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		UAnimMontage* HitReactMontage;
+
+	// chance of being stunned when hit by an enemy
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		float StunChance;
 public:
 	// Returns CameraBoom subobject
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; };
@@ -503,4 +535,9 @@ public:
 	void UnHighlightInventorySlot();
 
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
+	FORCEINLINE USoundCue* GetMeleeImpactSound() const { return MeleeImpactSound; }
+	FORCEINLINE UParticleSystem* GetBloodParticles() const { return BloodParticles; }
+
+	void Stun();
+	FORCEINLINE float GetStunChance() const { return StunChance; }
 };
