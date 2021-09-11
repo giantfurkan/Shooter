@@ -206,8 +206,14 @@ void AEnemy::AgroSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 	if (Character)
 	{
-		// set the value of the target blackboard key
-		EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), Character);
+		if (EnemyController)
+		{
+			if (EnemyController->GetBlackboardComponent())
+			{
+				// set the value of the target blackboard key
+				EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), Character);
+			}
+		}
 	}
 }
 
@@ -419,7 +425,7 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-void AEnemy::BulletHit_Implementation(FHitResult HitResult)
+void AEnemy::BulletHit_Implementation(FHitResult HitResult, AActor* Shooter, AController* ShooterController)
 {
 	if (ImpactSound)
 	{
@@ -428,22 +434,6 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 	if (ImpactParticles)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, HitResult.Location, FRotator(0.f), true);
-	}
-
-	if (bDying) return;
-	ShowHealthBar();
-
-	// determine whether bullet hit stuns
-	const float Stunned = FMath::FRandRange(0.1f, 1.f);
-	if (Stunned <= StunChance)
-	{
-		// stun the enemy
-		PlayHitMontage(FName("HitReactFront"));
-		SetStunned(true);
-	}
-	else
-	{
-		PlayHitMontage(FName("HitReactFront"));
 	}
 }
 
@@ -463,6 +453,23 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 	{
 		Health -= DamageAmount;
 	}
+
+	if (bDying) return DamageAmount;
+	ShowHealthBar();
+
+	// determine whether bullet hit stuns
+	const float Stunned = FMath::FRandRange(0.1f, 1.f);
+	if (Stunned <= StunChance)
+	{
+		// stun the enemy
+		PlayHitMontage(FName("HitReactFront"));
+		SetStunned(true);
+	}
+	else
+	{
+		PlayHitMontage(FName("HitReactFront"));
+	}
+
 	return DamageAmount;
 }
 
